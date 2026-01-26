@@ -1,0 +1,8 @@
+1. For testing loaded model's accuracy
+clang++ -Ofast -mcpu=apple-m4 -flto -ffast-math -DNDEBUG ./src/test.cpp ./src/network.cpp ./src/mnist_loader.cpp -o test && ./test
+
+2. For training the network
+clang++ -Ofast -mcpu=apple-m4 -flto -ffast-math -DNDEBUG ./src/training.cpp ./src/network.cpp ./src/mnist_loader.cpp -o training && ./training
+
+3. For testing the loaded model in action
+make

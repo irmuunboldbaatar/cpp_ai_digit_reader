@@ -1,0 +1,7 @@
+1 784 30 10
+
+Description:
+1. First number: "new_net" = 0 - if setting up new network, 1 - if training existing network.
+2. Second number: "sizes[0]" = input data size /vector<double>input; input.size()/ Should be fixed!
+~. Middle numbers: "sizes[~]" = Hidden layer numbers
+~. Last number: "sizes[~]" = output data size /vector<double>output; output.size()/ Should be fixed!

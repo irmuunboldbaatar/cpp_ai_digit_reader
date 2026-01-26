@@ -1,0 +1,6 @@
+10 100 0.1
+
+Description:
+1. First number: "epochs" = the number of training that involves the whole dataset.
+2. Second number: "batch_size" = division size of dataset in an epoch.
+3. Third number: "eta" = the learning rate.

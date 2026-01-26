@@ -1,0 +1,7 @@
+main
+mnist_loader
+test
+training
+.vscode
+.clang-format
+.DS_Store
