@@ -8,31 +8,72 @@
 using namespace std;
 using namespace sf;
 
+// canvas config
 float PIXEL = 8.0;
 int WIDTH_P = 28;
 int HEIGHT_P = 28;
-
 int TOTAL_PIXEL = WIDTH_P * HEIGHT_P;
-int WIDTH = WIDTH_P * PIXEL;
-int HEIGHT = HEIGHT_P * PIXEL;
+float WIDTH = WIDTH_P * PIXEL;    // = 224  when PIXEL = 8.0 WIDTH_P = 28
+float HEIGHT = HEIGHT_P * PIXEL;  // = 224  when PIXEL = 8.0 HEIGHT_P = 28
 
-bool isEmpty(vector<double> v) {
-    for (int i = 0; i < v.size(); i++)
-        if (v[i] != 0) return false;
-    return true;
+// window config
+int FPS = 120;
+unsigned int WINDOW_WIDTH =
+    WIDTH + 280;  // = 504  when PIXEL = 8.0 WIDTH_P = 28
+unsigned int WINDOW_HEIGHT =
+    HEIGHT + 280;  // = 448  when PIXEL = 8.0 HEIGHT_P = 28
+
+void print_eval(vector<double> eval, int value) {
+    cout << "Evaluation:" << endl;
+    for (int i = 0; i < eval.size(); i++) {
+        // Create the bar: 1 character for every 2% of
+        // confidence
+        int barWidth = static_cast<int>(eval[i] * 100 / 2.0);
+        string bar = "";
+        for (int b = 0; b < barWidth; b++) bar += "█";
+
+        // Print formatted line: "Digit X : [Percent]% [Bar]"
+        printf("Digit %d : %6.2f%% ", i, eval[i] * 100);
+        cout << bar << endl;
+    }
+    cout << "Result : " + to_string(value) << endl;
 }
 
 int main() {
-    string model_name = "784_100_10";
     // Neural network setup
+    string model_name = "784_100_10";
     Network net({0});
     net.load("model/model_data_" + model_name + ".txt");
 
     // Window setup
-    RenderWindow window(VideoMode({448, 224}), "AI Digit Reader");
-    window.setFramerateLimit(120);
+    sf::Color bgColor(241, 245, 249);
+    sf::RenderWindow window(VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}),
+                            "AI Digit Reader");
+    window.setFramerateLimit(FPS);
     window.setView(window.getDefaultView());
 
+    // The Drawing canvas
+    float canvas_x = WINDOW_WIDTH / 2 - WIDTH / 2;
+    float canvas_y = 56;
+    sf::RectangleShape paper;
+    paper.setSize({WIDTH, HEIGHT});
+    paper.setFillColor(sf::Color::White);
+    paper.setOutlineThickness(1.f);
+    paper.setOutlineColor(sf::Color(226, 232, 240));  // Subtle border
+    paper.setPosition({canvas_x, canvas_y});
+
+    // Inline of canvas
+    sf::RectangleShape outline;
+    outline.setSize(
+        {static_cast<float>(WIDTH - 72), static_cast<float>(HEIGHT - 72)});
+    outline.setFillColor(sf::Color::White);
+    outline.setOutlineThickness(1.f);
+    outline.setOutlineColor(sf::Color(226, 232, 240));  // Subtle border
+    outline.setPosition({static_cast<float>(canvas_x + 36),
+                         static_cast<float>(canvas_y + 36)});
+
+    // Canvas pixels setup
+    sf::Color inkColor(51, 65, 85);
     vector<double> pixels(TOTAL_PIXEL, 0.0);
 
     // Create and configure the text
@@ -41,105 +82,116 @@ int main() {
         std::cerr << "Error: Could not load font!" << std::endl;
         return -1;
     }
-    sf::Text text(font);
-    text.setString("Read :");
-    text.setCharacterSize(40);  // in pixels
-    text.setFillColor(sf::Color::White);
-    text.setStyle(sf::Text::Bold);
-    text.setPosition({234, 60});
-    sf::Text desc(font);
-    // desc.setString(
-    //     "Durvuljin dotor golluulan\nneg tsifr bichij\nEnter darna
-    //     uu.\n\n\n\n\n\nEnter  : " "Unshuulah\nSpace : Arilgah\n\nmodel id:"
-    //     + model_name);
-    desc.setString(
-        "Write a digit\nneatly in the box\nso that it fits in "
-        "it.\n\n\n\n\n\nEnter  : "
-        "make ai read digit\nSpace : clear box\n\nmodel id:" +
-        model_name);
-    desc.setCharacterSize(15);  // in pixels
-    desc.setFillColor(sf::Color::White);
-    desc.setStyle(sf::Text::Bold);
-    desc.setPosition({234, 5});
 
-    std::array line1 = {sf::Vertex{sf::Vector2f(36, 36)},
-                        Vertex{sf::Vector2f(36, 192)}};
-    std::array line2 = {sf::Vertex{sf::Vector2f(36, 36)},
-                        Vertex{sf::Vector2f(192, 36)}};
-    std::array line3 = {sf::Vertex{sf::Vector2f(192, 192)},
-                        Vertex{sf::Vector2f(192, 36)}};
-    std::array line4 = {sf::Vertex{sf::Vector2f(192, 192)},
-                        Vertex{sf::Vector2f(36, 192)}};
+    // Evalutation display
+    int eval_x = WINDOW_WIDTH / 2 - 224;
+    int eval_y = canvas_y + HEIGHT + 28 + 40 + 28;
+
+    sf::Text result(font);
+    result.setCharacterSize(40);
+    result.setFillColor(sf::Color(71, 85, 105));
+    result.setStyle(sf::Text::Bold);
+    result.setPosition({static_cast<float>(WINDOW_WIDTH / 2 - 90),
+                        static_cast<float>(canvas_y + HEIGHT + 28)});
+    result.setString("Result : ");
+
+    sf::Text desc(font);
+    desc.setString("Write a digit inside the box to try the ai !");
+    desc.setCharacterSize(18);
+    desc.setFillColor(sf::Color(71, 85, 105));
+    desc.setStyle(sf::Text::Bold);
+    desc.setPosition({static_cast<float>(WINDOW_WIDTH / 2 - 190), 10});
+
+    // cursor related
+    uint64_t mouseOff = 0;
+    bool readActive = false;
+
+    sf::Vector2f lastPos;
+    bool isDrawing = false;
+    std::vector<std::pair<sf::Vector2f, sf::Vector2f>> lines;
 
     while (window.isOpen()) {
-        // SFML 3 uses a new event polling system
         while (const optional event = window.pollEvent()) {
             if (event->is<Event::Closed>()) window.close();
 
             if (const auto* keyPressed =
                     event->getIf<sf::Event::KeyPressed>()) {
-                if (keyPressed->code == sf::Keyboard::Key::Space) {
+                if (keyPressed->code == sf::Keyboard::Key::Space ||
+                    keyPressed->code == sf::Keyboard::Key::Backspace) {
                     for (int i = 0; i < TOTAL_PIXEL; i++) pixels[i] = 0;
                     cout << "Canvas cleared." << endl;
                 }
 
                 if (keyPressed->code == sf::Keyboard::Key::Enter) {
-                    net.evaluate(pixels);
-                    cout << "Evaluation:" << endl;
-                    vector<double> eval = net.getEval();
-                    for (int i = 0; i < eval.size(); i++) {
-                        // Create the bar: 1 character for every 2% of
-                        // confidence
-                        int barWidth = static_cast<int>(eval[i] * 100 / 2.0);
-                        string bar = "";
-                        for (int b = 0; b < barWidth; b++) bar += "█";
-
-                        // Print formatted line: "Digit X : [Percent]% [Bar]"
-                        printf("Digit %d : %6.2f%% ", i, eval[i] * 100);
-                        cout << bar << endl;
-                    }
-                    cout << "Read : " + to_string(net.getValue()) << endl;
-                    text.setString("Read : " + to_string(net.getValue()));
+                    print_eval(net.getEval(), net.getValue());
                 }
             }
         }
 
         if (Mouse::isButtonPressed(Mouse::Button::Left)) {
             Vector2i pos = Mouse::getPosition(window);
-            int x = pos.x / PIXEL;
-            int y = pos.y / PIXEL;
+            int x = (pos.x - canvas_x) / PIXEL;
+            int y = (pos.y - canvas_y) / PIXEL;
 
             if (x >= 0 && x < WIDTH_P && y >= 0 && y < HEIGHT_P) {
                 pixels[y * HEIGHT_P + x] = 1.0;
+                net.evaluate(pixels);
+                mouseOff = 0;
+                readActive = true;
             }
         }
 
-        window.clear(Color(30, 30, 30));
-        window.draw(text);
+        // if stopped drawing, read the number
+        if (mouseOff > FPS * 0.2 && readActive) {
+            net.evaluate(pixels);
+            result.setString("Result : " + to_string(net.getValue()));
+            readActive = false;
+        }
+
+        mouseOff++;
+
+        window.clear(bgColor);
+        window.draw(result);
         window.draw(desc);
-        RectangleShape draw_bg(Vector2f(
-            {static_cast<float>(WIDTH), static_cast<float>(HEIGHT)}));
-        // In SFML 3, setPosition takes a Vector2f
-        draw_bg.setPosition({0.0, 0.0});
-        draw_bg.setFillColor(Color::Black);
-        window.draw(draw_bg);
+        window.draw(paper);
+        window.draw(outline);
+
         for (int i = 0; i < TOTAL_PIXEL; i++) {
             if (pixels[i] > 0) {
                 RectangleShape block(Vector2f(
                     {static_cast<float>(PIXEL), static_cast<float>(PIXEL)}));
-                // In SFML 3, setPosition takes a Vector2f
                 block.setPosition(
-                    {static_cast<float>((i % WIDTH_P) * PIXEL),
-                     static_cast<float>((i / HEIGHT_P) * PIXEL)});
-                block.setFillColor(Color::White);
+                    {static_cast<float>((i % WIDTH_P) * PIXEL + canvas_x),
+                     static_cast<float>((i / HEIGHT_P) * PIXEL + canvas_y)});
+                block.setFillColor(inkColor);
                 window.draw(block);
             }
         }
 
-        window.draw(line1.data(), line1.size(), sf::PrimitiveType::Lines);
-        window.draw(line2.data(), line2.size(), sf::PrimitiveType::Lines);
-        window.draw(line3.data(), line3.size(), sf::PrimitiveType::Lines);
-        window.draw(line4.data(), line4.size(), sf::PrimitiveType::Lines);
+        for (int i = 0; i < net.getEval().size(); i++) {
+            RectangleShape block(
+                Vector2f({36, static_cast<float>(36 * net.getEval()[i])}));
+            block.setPosition(
+                {static_cast<float>(eval_x + i * 44.8 + 2),
+                 static_cast<float>(eval_y + 2 + 36 * (1 - net.getEval()[i]))});
+            block.setFillColor(inkColor);
+            RectangleShape frame(Vector2f({40, 40}));
+            frame.setPosition({static_cast<float>(eval_x + i * 44.8),
+                               static_cast<float>(eval_y)});
+            frame.setFillColor(bgColor);
+            frame.setOutlineThickness(1.f);
+            frame.setOutlineColor(inkColor);
+            window.draw(frame);
+            window.draw(block);
+            sf::Text digit(font);
+            digit.setString(to_string(i));
+            digit.setCharacterSize(18);
+            digit.setFillColor(sf::Color(71, 85, 105));
+            digit.setStyle(sf::Text::Bold);
+            digit.setPosition({static_cast<float>(eval_x + i * 44.8 + 14),
+                               static_cast<float>(eval_y + 40 + 14)});
+            window.draw(digit);
+        }
 
         window.display();
     }

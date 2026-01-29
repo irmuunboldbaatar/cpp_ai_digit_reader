@@ -47,6 +47,11 @@ Network::Network(vector<int> v) : sizes(v) {
         weights.push_back(layer_weight);
         biases.push_back(layer_bias);
     }
+
+    eval = {};
+    for (int i = 0; i < 10; i++) {
+        eval.push_back(0.0);
+    }
 }
 
 // vector dot product
