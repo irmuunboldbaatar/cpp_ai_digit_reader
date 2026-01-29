@@ -23,6 +23,32 @@ unsigned int WINDOW_WIDTH =
 unsigned int WINDOW_HEIGHT =
     HEIGHT + 280;  // = 448  when PIXEL = 8.0 HEIGHT_P = 28
 
+// all color settings
+
+// dark blue
+// sf::Color bgColor(15, 23, 42);
+// sf::Color panel(2, 6, 23);
+// sf::Color primary(56, 189, 248);
+// sf::Color secondary(34, 211, 238);
+// sf::Color texts(220, 227, 237);
+// sf::Color borders(30, 41, 59);
+
+// light green
+// sf::Color bgColor(247, 251, 250);
+// sf::Color panel(255, 255, 255);
+// sf::Color primary(45, 212, 191);
+// sf::Color secondary(94, 234, 212);
+// sf::Color texts(19, 78, 74);
+// sf::Color borders(204, 251, 241);
+
+// hacker green
+sf::Color bgColor(0,0,0);
+sf::Color panel(0,0,0);
+sf::Color primary(97,207,90);
+sf::Color secondary(97,207,90);
+sf::Color textprimary(97,207,90);
+sf::Color textsecondary(97,207,90);
+
 void print_eval(vector<double> eval, int value) {
     cout << "Evaluation:" << endl;
     for (int i = 0; i < eval.size(); i++) {
@@ -46,7 +72,6 @@ int main() {
     net.load("model/model_data_" + model_name + ".txt");
 
     // Window setup
-    sf::Color bgColor(241, 245, 249);
     sf::RenderWindow window(VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}),
                             "AI Digit Reader");
     window.setFramerateLimit(FPS);
@@ -57,23 +82,22 @@ int main() {
     float canvas_y = 56;
     sf::RectangleShape paper;
     paper.setSize({WIDTH, HEIGHT});
-    paper.setFillColor(sf::Color::White);
+    paper.setFillColor(panel);
     paper.setOutlineThickness(1.f);
-    paper.setOutlineColor(sf::Color(226, 232, 240));  // Subtle border
+    paper.setOutlineColor(textsecondary);  // Subtle border
     paper.setPosition({canvas_x, canvas_y});
 
     // Inline of canvas
     sf::RectangleShape outline;
     outline.setSize(
         {static_cast<float>(WIDTH - 72), static_cast<float>(HEIGHT - 72)});
-    outline.setFillColor(sf::Color::White);
+    outline.setFillColor(panel);
     outline.setOutlineThickness(1.f);
-    outline.setOutlineColor(sf::Color(226, 232, 240));  // Subtle border
+    outline.setOutlineColor(secondary);  // Subtle border
     outline.setPosition({static_cast<float>(canvas_x + 36),
                          static_cast<float>(canvas_y + 36)});
 
-    // Canvas pixels setup
-    sf::Color inkColor(51, 65, 85);
+    // Canvas pixels setup=
     vector<double> pixels(TOTAL_PIXEL, 0.0);
 
     // Create and configure the text
@@ -89,7 +113,7 @@ int main() {
 
     sf::Text result(font);
     result.setCharacterSize(40);
-    result.setFillColor(sf::Color(71, 85, 105));
+    result.setFillColor(textprimary);
     result.setStyle(sf::Text::Bold);
     result.setPosition({static_cast<float>(WINDOW_WIDTH / 2 - 90),
                         static_cast<float>(canvas_y + HEIGHT + 28)});
@@ -98,7 +122,7 @@ int main() {
     sf::Text desc(font);
     desc.setString("Write a digit inside the box to try the ai !");
     desc.setCharacterSize(18);
-    desc.setFillColor(sf::Color(71, 85, 105));
+    desc.setFillColor(textsecondary);
     desc.setStyle(sf::Text::Bold);
     desc.setPosition({static_cast<float>(WINDOW_WIDTH / 2 - 190), 10});
 
@@ -163,7 +187,7 @@ int main() {
                 block.setPosition(
                     {static_cast<float>((i % WIDTH_P) * PIXEL + canvas_x),
                      static_cast<float>((i / HEIGHT_P) * PIXEL + canvas_y)});
-                block.setFillColor(inkColor);
+                block.setFillColor(primary);
                 window.draw(block);
             }
         }
@@ -174,19 +198,19 @@ int main() {
             block.setPosition(
                 {static_cast<float>(eval_x + i * 44.8 + 2),
                  static_cast<float>(eval_y + 2 + 36 * (1 - net.getEval()[i]))});
-            block.setFillColor(inkColor);
+            block.setFillColor(primary);
             RectangleShape frame(Vector2f({40, 40}));
             frame.setPosition({static_cast<float>(eval_x + i * 44.8),
                                static_cast<float>(eval_y)});
             frame.setFillColor(bgColor);
             frame.setOutlineThickness(1.f);
-            frame.setOutlineColor(inkColor);
+            frame.setOutlineColor(secondary);
             window.draw(frame);
             window.draw(block);
             sf::Text digit(font);
             digit.setString(to_string(i));
             digit.setCharacterSize(18);
-            digit.setFillColor(sf::Color(71, 85, 105));
+            digit.setFillColor(textprimary);
             digit.setStyle(sf::Text::Bold);
             digit.setPosition({static_cast<float>(eval_x + i * 44.8 + 14),
                                static_cast<float>(eval_y + 40 + 14)});
