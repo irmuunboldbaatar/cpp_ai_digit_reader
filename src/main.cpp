@@ -39,29 +39,6 @@ void print_eval(vector<double> eval, int value) {
     cout << "Result : " + to_string(value) << endl;
 }
 
-void drawThickLine(sf::RenderWindow& window, sf::Vector2f point1, sf::Vector2f point2, float thickness, sf::Color color) {
-    sf::Vector2f direction = point2 - point1;
-    float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-    
-    if (length > 0) {
-        sf::RectangleShape line(sf::Vector2f(length, thickness));
-        line.setOrigin({0, thickness / 2.f});
-        line.setPosition(point1);
-        line.setRotation(sf::degrees(std::atan2(direction.y, direction.x) * 180.f / 3.14159f));
-        line.setFillColor(color);
-        window.draw(line);
-        
-        // Add rounded caps for smoothness
-        sf::CircleShape cap(thickness / 2.f);
-        cap.setOrigin({thickness / 2.f, thickness / 2.f});
-        cap.setFillColor(color);
-        cap.setPosition(point1);
-        window.draw(cap);
-        cap.setPosition(point2);
-        window.draw(cap);
-    }
-}
-
 int main() {
     // Neural network setup
     string model_name = "784_100_10";
