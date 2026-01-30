@@ -23,9 +23,9 @@ double squish_prime(double x) {
     return s * (1.0 - s);
 }
 
-vector<double> Network::getEval() { return eval; }
+vector<double> Network::get_eval() { return eval; }
 
-int Network::getValue() { return value; }
+int Network::get_value() { return value; }
 
 Network::Network(vector<int> v) : sizes(v) {
     random_device rd;

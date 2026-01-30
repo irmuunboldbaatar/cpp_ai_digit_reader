@@ -148,7 +148,7 @@ int main() {
                 }
 
                 if (keyPressed->code == sf::Keyboard::Key::Enter) {
-                    print_eval(net.getEval(), net.getValue());
+                    print_eval(net.get_eval(), net.get_value());
                 }
             }
         }
@@ -172,7 +172,7 @@ int main() {
         // if stopped drawing, read the number
         if (mouseOff > FPS * 0.2 && readActive) {
             net.evaluate(pixels);
-            result.setString("Result : " + to_string(net.getValue()));
+            result.setString("Result : " + to_string(net.get_value()));
             readActive = false;
         }
 
@@ -197,12 +197,12 @@ int main() {
             }
         }
 
-        for (int i = 0; i < net.getEval().size(); i++) {
+        for (int i = 0; i < net.get_eval().size(); i++) {
             RectangleShape block(
-                Vector2f({36, static_cast<float>(36 * net.getEval()[i])}));
+                Vector2f({36, static_cast<float>(36 * net.get_eval()[i])}));
             block.setPosition(
                 {static_cast<float>(eval_x + i * 44.8 + 2),
-                 static_cast<float>(eval_y + 2 + 36 * (1 - net.getEval()[i]))});
+                 static_cast<float>(eval_y + 2 + 36 * (1 - net.get_eval()[i]))});
             block.setFillColor(primary);
             RectangleShape frame(Vector2f({40, 40}));
             frame.setPosition({static_cast<float>(eval_x + i * 44.8),
