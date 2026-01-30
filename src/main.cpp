@@ -24,30 +24,20 @@ unsigned int WINDOW_HEIGHT =
     HEIGHT + 280;  // = 448  when PIXEL = 8.0 HEIGHT_P = 28
 
 // all color settings
-
-// dark blue
-// sf::Color bgColor(15, 23, 42);
-// sf::Color panel(2, 6, 23);
-// sf::Color primary(56, 189, 248);
-// sf::Color secondary(34, 211, 238);
-// sf::Color texts(220, 227, 237);
-// sf::Color borders(30, 41, 59);
-
-// light green
-// sf::Color bgColor(247, 251, 250);
-// sf::Color panel(255, 255, 255);
-// sf::Color primary(45, 212, 191);
-// sf::Color secondary(94, 234, 212);
-// sf::Color texts(19, 78, 74);
-// sf::Color borders(204, 251, 241);
-
 // hacker green
-sf::Color bgColor(0,0,0);
-sf::Color panel(0,0,0);
-sf::Color primary(97,207,90);
-sf::Color secondary(97,207,90);
-sf::Color textprimary(97,207,90);
-sf::Color textsecondary(97,207,90);
+sf::Color bgColor(0, 0, 0);
+sf::Color panel(0, 0, 0);
+sf::Color primary(97, 207, 90);
+sf::Color secondary(97, 207, 90);
+sf::Color textprimary(97, 207, 90);
+sf::Color textsecondary(97, 207, 90);
+// hacker purple
+// sf::Color bgColor(0, 0, 0);
+// sf::Color panel(0, 0, 0);
+// sf::Color primary(153,50,204);
+// sf::Color secondary(153,50,204);
+// sf::Color textprimary(153,50,204);
+// sf::Color textsecondary(153,50,204);
 
 void print_eval(vector<double> eval, int value) {
     cout << "Evaluation:" << endl;
@@ -69,7 +59,7 @@ int main() {
     // Neural network setup
     string model_name = "784_100_10";
     Network net({0});
-    net.load("model/model_data_" + model_name + ".txt");
+    net.load("model/" + model_name + ".txt");
 
     // Window setup
     sf::RenderWindow window(VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}),
@@ -79,7 +69,7 @@ int main() {
 
     // The Drawing canvas
     float canvas_x = WINDOW_WIDTH / 2 - WIDTH / 2;
-    float canvas_y = 56;
+    float canvas_y = 84;
     sf::RectangleShape paper;
     paper.setSize({WIDTH, HEIGHT});
     paper.setFillColor(panel);
@@ -90,12 +80,12 @@ int main() {
     // Inline of canvas
     sf::RectangleShape outline;
     outline.setSize(
-        {static_cast<float>(WIDTH - 72), static_cast<float>(HEIGHT - 72)});
+        {static_cast<float>(WIDTH - 60), static_cast<float>(HEIGHT - 60)});
     outline.setFillColor(panel);
     outline.setOutlineThickness(1.f);
     outline.setOutlineColor(secondary);  // Subtle border
-    outline.setPosition({static_cast<float>(canvas_x + 36),
-                         static_cast<float>(canvas_y + 36)});
+    outline.setPosition({static_cast<float>(canvas_x + 30),
+                         static_cast<float>(canvas_y + 30)});
 
     // Canvas pixels setup=
     vector<double> pixels(TOTAL_PIXEL, 0.0);
@@ -120,11 +110,12 @@ int main() {
     result.setString("Result : ");
 
     sf::Text desc(font);
-    desc.setString("Write a digit inside the box to try the ai !");
-    desc.setCharacterSize(18);
+    desc.setString(
+        "Write a digit inside the box to try the ai !\nTip: Smooth, centered "
+        "strokes help the AI recognize your handwriting.");
+    desc.setCharacterSize(14);
     desc.setFillColor(textsecondary);
-    desc.setStyle(sf::Text::Bold);
-    desc.setPosition({static_cast<float>(WINDOW_WIDTH / 2 - 190), 10});
+    desc.setPosition({static_cast<float>(WINDOW_WIDTH / 2 - 240), 10});
 
     // cursor related
     uint64_t mouseOff = 0;
@@ -160,12 +151,15 @@ int main() {
 
             if (x >= 0 && x < WIDTH_P && y >= 0 && y < HEIGHT_P) {
                 pixels[y * HEIGHT_P + x] = 1.0;
+                if (x>0) pixels[y * HEIGHT_P + (x-1)] = 1.0;
+                if (y>0) pixels[(y-1) * HEIGHT_P + x] = 1.0;
+                if (y>0 && x>0) pixels[(y-1) * HEIGHT_P + (x-1)] = 1.0;
                 mouseOff = 0;
                 readActive = true;
                 if (frameCount % 6 == 0) {
+                    result.setString("Result : ");
                     net.evaluate(pixels);
                 }
-                
             }
         }
 
@@ -202,7 +196,8 @@ int main() {
                 Vector2f({36, static_cast<float>(36 * net.get_eval()[i])}));
             block.setPosition(
                 {static_cast<float>(eval_x + i * 44.8 + 2),
-                 static_cast<float>(eval_y + 2 + 36 * (1 - net.get_eval()[i]))});
+                 static_cast<float>(eval_y + 2 +
+                                    36 * (1 - net.get_eval()[i]))});
             block.setFillColor(primary);
             RectangleShape frame(Vector2f({40, 40}));
             frame.setPosition({static_cast<float>(eval_x + i * 44.8),
@@ -216,7 +211,6 @@ int main() {
             digit.setString(to_string(i));
             digit.setCharacterSize(18);
             digit.setFillColor(textprimary);
-            digit.setStyle(sf::Text::Bold);
             digit.setPosition({static_cast<float>(eval_x + i * 44.8 + 14),
                                static_cast<float>(eval_y + 40 + 14)});
             window.draw(digit);

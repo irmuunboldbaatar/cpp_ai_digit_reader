@@ -8,7 +8,7 @@ using namespace std;
 int main() {
     string model_name = "784_100_10";
     Network net({0});
-    net.load("model/model_data_" + model_name + ".txt");
+    net.load("model/" + model_name + ".txt");
     MNISTLoader loader;
     vector<vector<double>> check_images;
     vector<int> check_labels;
@@ -22,7 +22,7 @@ int main() {
         cout << "Test start!" << endl;
         for (int i = 0; i < total; i++) {
             net.evaluate(check_images[i]);
-            if (net.getValue() == check_labels[i]) {
+            if (net.get_value() == check_labels[i]) {
                 correct++;
             }
             cout << "\rProgress: [" << string(50 * (i + 1) / total, '#')
