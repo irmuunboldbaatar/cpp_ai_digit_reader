@@ -239,6 +239,57 @@ void Network::SGD(int epochs, int mini_batch_size, double eta,
     }
 }
 
+vector<double> distort_image(const vector<double>& img) {
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_real_distribution<> dis(-1, 1);
+    uniform_real_distribution<> scl(0.9, 1.1);
+    uniform_real_distribution<> rot(-0.1, 0.1);
+    double tx = dis(gen);
+    double ty = dis(gen);
+    double scale = scl(gen);
+    double angle = rot(gen);
+    
+    const int size = 28;
+    vector<double> out(size * size, 0.0); // Initialize with black background (0.0)
+
+    double cos_a = cos(angle);
+    double sin_a = sin(angle);
+
+    for (int y_out = 0; y_out < size; ++y_out) {
+        for (int x_out = 0; x_out < size; ++x_out) {
+            
+            // 1. Center the coordinates (shift origin to 14,14)
+            double x_centered = x_out - 13.5;
+            double y_centered = y_out - 13.5;
+
+            // 2. Apply inverse transformation (Map output back to input)
+            // Scaling and Rotation applied relative to center
+            double x_in = (cos_a * x_centered + sin_a * y_centered) / scale + 13.5 - tx;
+            double y_in = (-sin_a * x_centered + cos_a * y_centered) / scale + 13.5 - ty;
+
+            // 3. Bilinear Interpolation
+            int x0 = floor(x_in);
+            int y0 = floor(y_in);
+            int x1 = x0 + 1;
+            int y1 = y0 + 1;
+
+            if (x0 >= 0 && x1 < size && y0 >= 0 && y1 < size) {
+                double dx = x_in - x0;
+                double dy = y_in - y0;
+
+                double val = img[y0 * size + x0] * (1 - dx) * (1 - dy) +
+                             img[y0 * size + x1] * dx * (1 - dy) +
+                             img[y1 * size + x0] * (1 - dx) * dy +
+                             img[y1 * size + x1] * dx * dy;
+
+                out[y_out * size + x_out] = val;
+            }
+        }
+    }
+    return out;
+}
+
 void Network::update_mini_batch(const vector<int>& indices, int start,
                                 int mini_batch_size, double eta,
                                 const vector<vector<double>>& train_images,
