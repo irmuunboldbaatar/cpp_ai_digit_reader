@@ -1,4 +1,4 @@
-10 100 0.1
+10 80 0.005
 
 Description:
 1. First number: "epochs" = the number of training that involves the whole dataset.

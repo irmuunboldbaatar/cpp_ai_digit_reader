@@ -21,9 +21,8 @@ int main() {
         cerr << "Error: " << e.what() << endl;
     }
 
-    // Want to add feature that loads sizes and names from network_config.txt
     Network net({0});
-    string model_name = "784_100_10_L2";
+    string model_name = "784_100_10";
     net.load("model/model_data_" + model_name + ".txt");
 
     int epochs;
