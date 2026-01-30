@@ -128,6 +128,7 @@ int main() {
 
     // cursor related
     uint64_t mouseOff = 0;
+    uint64_t frameCount = 0;
     bool readActive = false;
 
     sf::Vector2f lastPos;
@@ -159,9 +160,12 @@ int main() {
 
             if (x >= 0 && x < WIDTH_P && y >= 0 && y < HEIGHT_P) {
                 pixels[y * HEIGHT_P + x] = 1.0;
-                net.evaluate(pixels);
                 mouseOff = 0;
                 readActive = true;
+                if (frameCount % 6 == 0) {
+                    net.evaluate(pixels);
+                }
+                
             }
         }
 
@@ -173,6 +177,7 @@ int main() {
         }
 
         mouseOff++;
+        frameCount++;
 
         window.clear(bgColor);
         window.draw(result);
